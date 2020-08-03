@@ -27,7 +27,7 @@ func (azurePlugin AzurePlugin) Init(env *plugin.Environment) error {
 }
 
 func (azurePlugin AzurePlugin) DatastoreTypeName() string {
-	return "azureds"
+	return "azure-data-store"
 }
 
 func (azurePlugin AzurePlugin) DatastoreConfigParser() fsrepo.ConfigFromMap {
