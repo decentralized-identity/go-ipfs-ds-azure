@@ -21,10 +21,10 @@ type AzureStorage struct {
 
 // Config representation for all info needed
 type Config struct {
-	accountName string
-	accountKey string
-	containerName string
-	folderName string
+	AccountName string
+	AccountKey string
+	ContainerName string
+	FolderName string
 }
 
 // NewAzureDatastore creates an AzureDatastore
@@ -37,10 +37,10 @@ func NewAzureDatastore(conf Config) (*AzureStorage, error) {
 // Put adds a key value pair to the storage
 func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
 	// From the Azure portal, get your Storage account blob service URL endpoint.
-	accountName := storage.Config.accountName
-	accountKey := storage.Config.accountKey
-	containerName := storage.Config.containerName
-	folderName := storage.Config.folderName
+	accountName := storage.Config.AccountName
+	accountKey := storage.Config.AccountKey
+	containerName := storage.Config.ContainerName
+	folderName := storage.Config.FolderName
 
 	// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
@@ -75,10 +75,10 @@ func (storage *AzureStorage) Sync(prefix ds.Key) error {
 // Get gets the data from the desired key
 func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 	// From the Azure portal, get your Storage account blob service URL endpoint.
-	accountName := storage.Config.accountName
-	accountKey := storage.Config.accountKey
-	containerName := storage.Config.containerName
-	folderName := storage.Config.folderName
+	accountName := storage.Config.AccountName
+	accountKey := storage.Config.AccountKey
+	containerName := storage.Config.ContainerName
+	folderName := storage.Config.FolderName
 
 	// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
@@ -106,10 +106,10 @@ func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 // Has checks if the given key exists
 func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
 		// From the Azure portal, get your Storage account blob service URL endpoint.
-		accountName := storage.Config.accountName
-		accountKey := storage.Config.accountKey
-		containerName := storage.Config.containerName
-		folderName := storage.Config.folderName
+		accountName := storage.Config.AccountName
+		accountKey := storage.Config.AccountKey
+		containerName := storage.Config.ContainerName
+		folderName := storage.Config.FolderName
 	
 		// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
 		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
@@ -135,10 +135,10 @@ func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
 // GetSize gets the size of the specified key
 func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
 		// From the Azure portal, get your Storage account blob service URL endpoint.
-		accountName := storage.Config.accountName
-		accountKey := storage.Config.accountKey
-		containerName := storage.Config.containerName
-		folderName := storage.Config.folderName
+		accountName := storage.Config.AccountName
+		accountKey := storage.Config.AccountKey
+		containerName := storage.Config.ContainerName
+		folderName := storage.Config.FolderName
 	
 		// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
 		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
@@ -160,10 +160,10 @@ func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
 // Delete deletes the specified key
 func (storage *AzureStorage) Delete(k ds.Key) error {
 		// From the Azure portal, get your Storage account blob service URL endpoint.
-		accountName := storage.Config.accountName
-		accountKey := storage.Config.accountKey
-		containerName := storage.Config.containerName
-		folderName := storage.Config.folderName
+		accountName := storage.Config.AccountName
+		accountKey := storage.Config.AccountKey
+		containerName := storage.Config.ContainerName
+		folderName := storage.Config.FolderName
 	
 		// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
 		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
