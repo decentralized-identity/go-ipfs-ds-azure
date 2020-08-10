@@ -16,10 +16,10 @@ IPFS_VERSION ?= $(lastword $(shell $(GOCC) list -m github.com/ipfs/go-ipfs))
 
 .PHONY: install build
 
-go.mod: FORCE
-	./set-target.sh $(IPFS_VERSION)
+# go.mod: FORCE
+# 	./set-target.sh $(IPFS_VERSION)
 
-FORCE:
+# FORCE:
 
 azureplugin.so: plugin/main/main.go go.mod
 	$(GOCC) build $(GOFLAGS) -buildmode=plugin -o "$@" "$<"

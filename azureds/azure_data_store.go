@@ -43,7 +43,7 @@ func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
 	folderName := storage.Config.FolderName
 
 	// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
+	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
 			log.Fatal(err)
@@ -81,7 +81,7 @@ func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 	folderName := storage.Config.FolderName
 
 	// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
+	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
 			log.Fatal(err)
@@ -112,7 +112,7 @@ func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
 		folderName := storage.Config.FolderName
 	
 		// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
+		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 		credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 		if err != nil {
 				log.Fatal(err)
@@ -141,7 +141,7 @@ func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
 		folderName := storage.Config.FolderName
 	
 		// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
+		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 		credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 		if err != nil {
 				log.Fatal(err)
@@ -166,7 +166,7 @@ func (storage *AzureStorage) Delete(k ds.Key) error {
 		folderName := storage.Config.FolderName
 	
 		// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k))
+		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 		credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 		if err != nil {
 				log.Fatal(err)
@@ -190,4 +190,54 @@ func (storage *AzureStorage) Query(q dsq.Query) (dsq.Results, error) {
 // Close is not implemented
 func (storage *AzureStorage) Close() error {
 	return nil
+}
+
+type op struct {
+	delete bool
+	value  []byte
+}
+
+// basicBatch implements
+type batchOp struct {
+	val    []byte
+	delete bool
+}
+
+type azureBatch struct {
+	storage          *AzureStorage
+	ops        map[string]batchOp
+}
+
+// Batch returns a batch struct that can take more ops or be committed
+func (storage *AzureStorage) Batch() (ds.Batch, error) {
+	return &azureBatch{
+		storage: storage,
+		ops: make(map[string]batchOp),
+	}, nil
+}
+
+func (batch *azureBatch) Put(key ds.Key, val []byte) error {
+	batch.ops[key.String()] = batchOp{val: val, delete: false}
+	return nil
+}
+
+func (batch *azureBatch) Delete(key ds.Key) error {
+	batch.ops[key.String()] = batchOp{val: nil, delete: true}
+	return nil
+}
+
+func (batch *azureBatch) Commit() error {
+	var err error
+	for k, op := range batch.ops {
+		if op.delete {
+			err = batch.storage.Delete(ds.NewKey(k))
+		} else {
+			err = batch.storage.Put(ds.NewKey(k), op.val)
+		}
+		if err != nil {
+			break
+		}
+	}
+
+	return err
 }
