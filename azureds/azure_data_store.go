@@ -36,6 +36,7 @@ func NewAzureDatastore(conf Config) (*AzureStorage, error) {
 
 // Put adds a key value pair to the storage
 func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
+	fmt.Printf("Put is called on %s", k.String())
 	// From the Azure portal, get your Storage account blob service URL endpoint.
 	accountName := storage.Config.AccountName
 	accountKey := storage.Config.AccountKey
@@ -74,6 +75,7 @@ func (storage *AzureStorage) Sync(prefix ds.Key) error {
 
 // Get gets the data from the desired key
 func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
+	fmt.Printf("Get is called on %s", k.String())
 	// From the Azure portal, get your Storage account blob service URL endpoint.
 	accountName := storage.Config.AccountName
 	accountKey := storage.Config.AccountKey
