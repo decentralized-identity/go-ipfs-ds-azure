@@ -47,7 +47,6 @@ func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
-			log.Fatal(err)
 			return err
 	}
 	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
@@ -61,7 +60,6 @@ func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
 	_, err = blobURL.Upload(ctx, bytes.NewReader(value), azblob.BlobHTTPHeaders{},
 	azblob.Metadata{"author": "Jeffrey", "app": creatingApp}, azblob.BlobAccessConditions{})
 	if err != nil {
-			log.Fatal(err)
 			return err
 	}
 
@@ -86,7 +84,6 @@ func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
-			log.Fatal(err)
 			return nil, err
 	}
 	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
@@ -94,10 +91,15 @@ func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 	ctx := context.Background() // This example uses a never-expiring context
 
 	response, err := blobURL.Download(ctx, 0, 0, azblob.BlobAccessConditions{}, false)
+
 	if err != nil {
-			log.Fatal(err)
-			return nil, err
+		if stgErr, ok := err.(azblob.StorageError); ok &&
+		stgErr.ServiceCode() == azblob.ServiceCodeBlobNotFound {
+			return nil, ds.ErrNotFound
+		}
+		return nil, err
 	}
+
 	blobData := &bytes.Buffer{}
 	reader := response.Body(azblob.RetryReaderOptions{})
 	blobData.ReadFrom(reader)
@@ -118,7 +120,6 @@ func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
-			log.Fatal(err)
 			return false, err
 	}
 	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
@@ -128,7 +129,6 @@ func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
 	if err != nil {
 		if stgErr, ok := err.(azblob.StorageError); ok &&
 		stgErr.ServiceCode() == azblob.ServiceCodeBlobNotFound {
-			fmt.Println("not found")
 			return false, nil
 		}
 		return false, err
@@ -139,6 +139,7 @@ func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
 
 // GetSize gets the size of the specified key
 func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
+	fmt.Printf("GetSize is called on %s", k.String())
 	// From the Azure portal, get your Storage account blob service URL endpoint.
 	accountName := storage.Config.AccountName
 	accountKey := storage.Config.AccountKey
@@ -149,7 +150,6 @@ func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
-			log.Fatal(err)
 			return 0, err
 	}
 	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
@@ -157,6 +157,10 @@ func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
 	ctx := context.Background() // This example uses a never-expiring context
 	blockList, err := blobURL.GetBlockList(ctx, azblob.BlockListCommitted, azblob.LeaseAccessConditions{})
 	if err != nil {
+		if stgErr, ok := err.(azblob.StorageError); ok &&
+		stgErr.ServiceCode() == azblob.ServiceCodeBlobNotFound {
+			return 0, ds.ErrNotFound
+		}
 		return 0, err
 	}
 	return int(blockList.BlobContentLength()), nil
@@ -164,6 +168,7 @@ func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
 
 // Delete deletes the specified key
 func (storage *AzureStorage) Delete(k ds.Key) error {
+	fmt.Printf("Delete is called on %s", k.String())
 	// From the Azure portal, get your Storage account blob service URL endpoint.
 	accountName := storage.Config.AccountName
 	accountKey := storage.Config.AccountKey
@@ -174,7 +179,6 @@ func (storage *AzureStorage) Delete(k ds.Key) error {
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
-			log.Fatal(err)
 			return err
 	}
 	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
@@ -182,6 +186,10 @@ func (storage *AzureStorage) Delete(k ds.Key) error {
 	ctx := context.Background() // This example uses a never-expiring context
 	_, err = blobURL.Delete(ctx, azblob.DeleteSnapshotsOptionNone, azblob.BlobAccessConditions{})
 	if err != nil {
+		if stgErr, ok := err.(azblob.StorageError); ok &&
+		stgErr.ServiceCode() == azblob.ServiceCodeBlobNotFound {
+			return ds.ErrNotFound
+		}
 		return err
 	}
 	return nil
