@@ -36,7 +36,6 @@ func NewAzureDatastore(conf Config) (*AzureStorage, error) {
 
 // Put adds a key value pair to the storage
 func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
-	fmt.Printf("Put is called on %s", k.String())
 	// From the Azure portal, get your Storage account blob service URL endpoint.
 	accountName := storage.Config.AccountName
 	accountKey := storage.Config.AccountKey
@@ -73,7 +72,6 @@ func (storage *AzureStorage) Sync(prefix ds.Key) error {
 
 // Get gets the data from the desired key
 func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
-	fmt.Printf("Get is called on %s", k.String())
 	// From the Azure portal, get your Storage account blob service URL endpoint.
 	accountName := storage.Config.AccountName
 	accountKey := storage.Config.AccountKey
@@ -93,10 +91,13 @@ func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 	response, err := blobURL.Download(ctx, 0, 0, azblob.BlobAccessConditions{}, false)
 
 	if err != nil {
+		fmt.Printf("Get call failed on %s", k.String())
 		if stgErr, ok := err.(azblob.StorageError); ok &&
 		stgErr.ServiceCode() == azblob.ServiceCodeBlobNotFound {
+			fmt.Printf(" in ds not found")
 			return nil, ds.ErrNotFound
 		}
+		fmt.Printf(" not in ds not found")
 		return nil, err
 	}
 
@@ -109,7 +110,6 @@ func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 
 // Has checks if the given key exists
 func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
-	fmt.Printf("Has is called on %s", k.String())
 	// From the Azure portal, get your Storage account blob service URL endpoint.
 	accountName := storage.Config.AccountName
 	accountKey := storage.Config.AccountKey
@@ -133,13 +133,11 @@ func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
 		}
 		return false, err
 	}
-	fmt.Println("found")
 	return true, nil
 }
 
 // GetSize gets the size of the specified key
 func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
-	fmt.Printf("GetSize is called on %s", k.String())
 	// From the Azure portal, get your Storage account blob service URL endpoint.
 	accountName := storage.Config.AccountName
 	accountKey := storage.Config.AccountKey
@@ -168,7 +166,6 @@ func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
 
 // Delete deletes the specified key
 func (storage *AzureStorage) Delete(k ds.Key) error {
-	fmt.Printf("Delete is called on %s", k.String())
 	// From the Azure portal, get your Storage account blob service URL endpoint.
 	accountName := storage.Config.AccountName
 	accountKey := storage.Config.AccountKey
