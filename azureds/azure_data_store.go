@@ -93,12 +93,12 @@ func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 		fmt.Printf("Get call failed on %s", k.String())
 		if stgErr, ok := err.(azblob.StorageError); ok {
 			if stgErr.ServiceCode() == azblob.ServiceCodeBlobNotFound {
-				fmt.Printf(" in ds not found")
+				fmt.Printf(" in ds not found, expected")
 				return nil, ds.ErrNotFound
 			}
-			fmt.Printf(" not blob not found")
+			fmt.Printf(" not blob not found, unexpected")
 		}
-		fmt.Printf(" not in ds not found")
+		fmt.Printf(" not in ds not found, unexpected")
 		return nil, err
 	}
 
