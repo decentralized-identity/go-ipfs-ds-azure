@@ -3,7 +3,6 @@ package azureds
 import (
 	"net/url"
 	"fmt"
-	"log"
 	"context"
 	"os"
 	"bytes"
