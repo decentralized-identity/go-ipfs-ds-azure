@@ -33,22 +33,30 @@ func NewAzureDatastore(conf Config) (*AzureStorage, error) {
 	}, nil
 }
 
+// GetBlockURL returns the block url of a given key
+func (storage *AzureStorage) GetBlockURL(key string) (*azblob.BlockBlobURL, error) {
+		// From the Azure portal, get your Storage account blob service URL endpoint.
+		accountName := storage.Config.AccountName
+		accountKey := storage.Config.AccountKey
+		containerName := storage.Config.ContainerName
+		folderName := storage.Config.FolderName
+	
+		// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
+		u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, key))
+		credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+		if err != nil {
+				return nil, err
+		}
+		blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+		return &blobURL, nil
+}
+
 // Put adds a key value pair to the storage
 func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
-	// From the Azure portal, get your Storage account blob service URL endpoint.
-	accountName := storage.Config.AccountName
-	accountKey := storage.Config.AccountKey
-	containerName := storage.Config.ContainerName
-	folderName := storage.Config.FolderName
-
-	// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
-	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
-			return err
+		return err
 	}
-	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
-
 	ctx := context.Background() // This example uses a never-expiring context
 
 	// Create a blob with metadata (string key/value pairs)
@@ -71,19 +79,10 @@ func (storage *AzureStorage) Sync(prefix ds.Key) error {
 
 // Get gets the data from the desired key
 func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
-	// From the Azure portal, get your Storage account blob service URL endpoint.
-	accountName := storage.Config.AccountName
-	accountKey := storage.Config.AccountKey
-	containerName := storage.Config.ContainerName
-	folderName := storage.Config.FolderName
-
-	// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
-	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
-	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
 
 	ctx := context.Background() // This example uses a never-expiring context
 
@@ -111,19 +110,10 @@ func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 
 // Has checks if the given key exists
 func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
-	// From the Azure portal, get your Storage account blob service URL endpoint.
-	accountName := storage.Config.AccountName
-	accountKey := storage.Config.AccountKey
-	containerName := storage.Config.ContainerName
-	folderName := storage.Config.FolderName
-
-	// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
-	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
-			return false, err
+		return false, err
 	}
-	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
 
 	ctx := context.Background() // This example uses a never-expiring context
 	_, err = blobURL.GetBlockList(ctx, azblob.BlockListCommitted, azblob.LeaseAccessConditions{})
@@ -139,19 +129,10 @@ func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
 
 // GetSize gets the size of the specified key
 func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
-	// From the Azure portal, get your Storage account blob service URL endpoint.
-	accountName := storage.Config.AccountName
-	accountKey := storage.Config.AccountKey
-	containerName := storage.Config.ContainerName
-	folderName := storage.Config.FolderName
-
-	// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
-	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
-			return 0, err
+		return 0, err
 	}
-	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
 
 	ctx := context.Background() // This example uses a never-expiring context
 	blockList, err := blobURL.GetBlockList(ctx, azblob.BlockListCommitted, azblob.LeaseAccessConditions{})
@@ -167,19 +148,10 @@ func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
 
 // Delete deletes the specified key
 func (storage *AzureStorage) Delete(k ds.Key) error {
-	// From the Azure portal, get your Storage account blob service URL endpoint.
-	accountName := storage.Config.AccountName
-	accountKey := storage.Config.AccountKey
-	containerName := storage.Config.ContainerName
-	folderName := storage.Config.FolderName
-
-	// Create a ContainerURL object that wraps a soon-to-be-created blob's URL and a default pipeline.
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s%s", accountName, containerName, folderName, k.String()))
-	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
-			return err
+		return err
 	}
-	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
 
 	ctx := context.Background() // This example uses a never-expiring context
 	_, err = blobURL.Delete(ctx, azblob.DeleteSnapshotsOptionNone, azblob.BlobAccessConditions{})
