@@ -64,7 +64,7 @@ func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
 	// Therefore, you should always use lowercase letters; especially when querying a map for a metadata key.
 	creatingApp, _ := os.Executable()
 	_, err = blobURL.Upload(ctx, bytes.NewReader(value), azblob.BlobHTTPHeaders{},
-	azblob.Metadata{"author": "Jeffrey", "app": creatingApp}, azblob.BlobAccessConditions{})
+	azblob.Metadata{"author": "ipfs", "app": creatingApp}, azblob.BlobAccessConditions{})
 	if err != nil {
 			return err
 	}
