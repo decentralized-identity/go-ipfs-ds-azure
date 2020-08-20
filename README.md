@@ -4,6 +4,7 @@ Go implementation of ipfs Azure datastore. Using it as a plugin for ipfs allows 
 ## Prerequisites
 - Golang https://golang.org/dl/
 - Make https://www.gnu.org/software/make/
+- This build process only work on Linux/Mac. To run on Windows, Windows Linux subsystem is required: https://docs.microsoft.com/en-us/windows/wsl/install-win10
 
 
 ## How to use it?
