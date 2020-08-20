@@ -35,6 +35,6 @@ Once ipfs is successfully built, use the following configurations
           "type": "measure"
         },`
 
-3. (optional) it is also possible to switch the root mount point to Azure, but block is the bare minimum
+3. (optional) it is also possible to switch the root mount point from levelds to Azure, but block is the bare minimum for data to be persistent.
 
 4. now you can run ipfs with the config file and it will connect to Azure `ipfs init CONFIG_FILE_NAME`
