@@ -30,7 +30,7 @@ type Config struct {
 func NewAzureDatastore(conf Config) (*AzureStorage, error) {
 	credential, err := azblob.NewSharedKeyCredential(conf.AccountName, conf.AccountKey)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
 
