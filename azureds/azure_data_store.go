@@ -28,6 +28,17 @@ type Config struct {
 
 // NewAzureDatastore creates an AzureDatastore
 func NewAzureDatastore(conf Config) (*AzureStorage, error) {
+	credential, err := azblob.NewSharedKeyCredential(conf.AccountName, conf.AccountKey)
+	if err != nil {
+		return nil, err
+	}
+	pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
+
+	baseUrl, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", conf.AccountName))
+	serviceURL := azblob.NewServiceURL(*baseUrl, pipeline)
+	containerURL := serviceURL.NewContainerURL(conf.ContainerName)
+	containerURL.Create(context.Background(), azblob.Metadata{}, "")
+
 	return &AzureStorage{
 		Config: conf,
 	}, nil
