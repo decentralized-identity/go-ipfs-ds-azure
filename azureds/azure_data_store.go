@@ -37,7 +37,7 @@ func NewAzureDatastore(conf Config) (*AzureStorage, error) {
 	baseUrl, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", conf.AccountName))
 	serviceURL := azblob.NewServiceURL(*baseUrl, pipeline)
 	containerURL := serviceURL.NewContainerURL(conf.ContainerName)
-	containerURL.Create(ctx, Metadata{}, "")
+	containerURL.Create(context.Background(), azblob.Metadata{}, "")
 
 	return &AzureStorage{
 		Config: conf,
