@@ -1,5 +1,6 @@
 # go-ipfs-ds-azure
 Go implementation of ipfs Azure datastore. Using it as a plugin for ipfs allows you to host ipfs files on Azure blob storage.
+This is a concrete implementation of the interface https://github.com/ipfs/go-datastore. And the instructions for ipfs plugin modules can be found here https://github.com/ipfs/go-ipfs/blob/master/plugin/loader/preload_list
 
 ## Prerequisites
 - Golang https://golang.org/dl/
