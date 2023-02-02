@@ -63,12 +63,11 @@ func (storage *AzureStorage) GetBlockURL(key string) (*azblob.BlockBlobURL, erro
 }
 
 // Put adds a key value pair to the storage
-func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
+func (storage *AzureStorage) Put(ctx context.Context, k ds.Key, value []byte) error {
 	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
 		return err
 	}
-	ctx := context.Background() // This example uses a never-expiring context
 
 	// Create a blob with metadata (string key/value pairs)
 	// NOTE: Metadata key names are always converted to lowercase before being sent to the Storage Service.
@@ -84,18 +83,16 @@ func (storage *AzureStorage) Put(k ds.Key, value []byte) error {
 }
 
 // Sync is unimplemented
-func (storage *AzureStorage) Sync(prefix ds.Key) error {
+func (storage *AzureStorage) Sync(ctx context.Context, prefix ds.Key) error {
 	return nil
 }
 
 // Get gets the data from the desired key
-func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
+func (storage *AzureStorage) Get(ctx context.Context, k ds.Key) ([]byte, error) {
 	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
 		return nil, err
 	}
-
-	ctx := context.Background() // This example uses a never-expiring context
 
 	response, err := blobURL.Download(ctx, 0, 0, azblob.BlobAccessConditions{}, false)
 
@@ -116,13 +113,12 @@ func (storage *AzureStorage) Get(k ds.Key) ([]byte, error) {
 }
 
 // Has checks if the given key exists
-func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
+func (storage *AzureStorage) Has(ctx context.Context, k ds.Key) (exists bool, err error) {
 	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
 		return false, err
 	}
 
-	ctx := context.Background() // This example uses a never-expiring context
 	_, err = blobURL.GetBlockList(ctx, azblob.BlockListCommitted, azblob.LeaseAccessConditions{})
 	if err != nil {
 		if stgErr, ok := err.(azblob.StorageError); ok &&
@@ -135,13 +131,12 @@ func (storage *AzureStorage) Has(k ds.Key) (exists bool, err error) {
 }
 
 // GetSize gets the size of the specified key
-func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
+func (storage *AzureStorage) GetSize(ctx context.Context, k ds.Key) (size int, err error) {
 	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
 		return 0, err
 	}
 
-	ctx := context.Background() // This example uses a never-expiring context
 	blockList, err := blobURL.GetBlockList(ctx, azblob.BlockListCommitted, azblob.LeaseAccessConditions{})
 	if err != nil {
 		if stgErr, ok := err.(azblob.StorageError); ok &&
@@ -154,13 +149,12 @@ func (storage *AzureStorage) GetSize(k ds.Key) (size int, err error) {
 }
 
 // Delete deletes the specified key
-func (storage *AzureStorage) Delete(k ds.Key) error {
+func (storage *AzureStorage) Delete(ctx context.Context, k ds.Key) error {
 	blobURL, err := storage.GetBlockURL(k.String())
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background() // This example uses a never-expiring context
 	_, err = blobURL.Delete(ctx, azblob.DeleteSnapshotsOptionNone, azblob.BlobAccessConditions{})
 	if err != nil {
 		if stgErr, ok := err.(azblob.StorageError); ok &&
@@ -173,7 +167,7 @@ func (storage *AzureStorage) Delete(k ds.Key) error {
 }
 
 // Query returns a dsq result
-func (storage *AzureStorage) Query(q dsq.Query) (dsq.Results, error) {
+func (storage *AzureStorage) Query(ctx context.Context, q dsq.Query) (dsq.Results, error) {
 	return nil, fmt.Errorf("Azure storage query not supported")
 }
 
@@ -199,30 +193,30 @@ type azureBatch struct {
 }
 
 // Batch returns a batch struct that can take more ops or be committed
-func (storage *AzureStorage) Batch() (ds.Batch, error) {
+func (storage *AzureStorage) Batch(ctx context.Context) (ds.Batch, error) {
 	return &azureBatch{
 		storage: storage,
 		ops: make(map[string]batchOp),
 	}, nil
 }
 
-func (batch *azureBatch) Put(key ds.Key, val []byte) error {
+func (batch *azureBatch) Put(ctx context.Context, key ds.Key, val []byte) error {
 	batch.ops[key.String()] = batchOp{val: val, delete: false}
 	return nil
 }
 
-func (batch *azureBatch) Delete(key ds.Key) error {
+func (batch *azureBatch) Delete(ctx context.Context, key ds.Key) error {
 	batch.ops[key.String()] = batchOp{val: nil, delete: true}
 	return nil
 }
 
-func (batch *azureBatch) Commit() error {
+func (batch *azureBatch) Commit(ctx context.Context) error {
 	var err error
 	for k, op := range batch.ops {
 		if op.delete {
-			err = batch.storage.Delete(ds.NewKey(k))
+			err = batch.storage.Delete(ctx, ds.NewKey(k))
 		} else {
-			err = batch.storage.Put(ds.NewKey(k), op.val)
+			err = batch.storage.Put(ctx, ds.NewKey(k), op.val)
 		}
 		if err != nil {
 			break

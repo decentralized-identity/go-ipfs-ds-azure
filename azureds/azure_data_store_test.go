@@ -4,6 +4,8 @@ import (
 	"testing"
 	"math/rand"
 	"strconv"
+	"context"
+	"time"
 
 	ds "github.com/ipfs/go-datastore"
 )
@@ -18,8 +20,10 @@ func TestIntegration(t *testing.T) {
 
 	testKey := ds.NewKey(strconv.Itoa(rand.Int()))
 
+	ctx, _ := context.WithTimeout(context.Background(), 5 * time.Minute)
+
 	// test has false
-	has, err := azds.Has(testKey)
+	has, err := azds.Has(ctx, testKey)
 	if err != nil {
 		t.Errorf("unexpected error when has expected false but got error %s", err)
 	} else if has {
@@ -27,13 +31,13 @@ func TestIntegration(t *testing.T) {
 	}
 
 	// test put
-	err = azds.Put(testKey, []byte("test string"))
+	err = azds.Put(ctx, testKey, []byte("test string"))
 	if err != nil {
 		t.Errorf("unexpected error when put %s", err)
 	}
 
 	// test has true 
-	has, err = azds.Has(testKey)
+	has, err = azds.Has(ctx, testKey)
 	if err != nil {
 		t.Errorf("unexpected error when has expected true but got error %s", err)
 	} else if !has {
@@ -41,19 +45,19 @@ func TestIntegration(t *testing.T) {
 	}
 
 	// test get
-	_, err = azds.Get(testKey)
+	_, err = azds.Get(ctx, testKey)
 	if err != nil {
 		t.Errorf("unexpected error when get, got error %s", err)
 	}
 
 	// test delete
-	err = azds.Delete(testKey)
+	err = azds.Delete(ctx, testKey)
 	if err != nil {
 		t.Errorf("unexpected error when delete got error %s", err)
 	}
 
 	// test that delete actually happened
-	has, err = azds.Has(testKey)
+	has, err = azds.Has(ctx, testKey)
 	if err != nil {
 		t.Errorf("unexpected error when has expected false after delete but got error %s", err)
 	} else if has {
